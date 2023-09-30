@@ -11,7 +11,8 @@ import (
 	"github.com/thecodingmachine/gotenberg-go-client/v7"
 )
 
-func uploadHandler(w http.ResponseWriter, r *http.Request) {
+// Function to handle initial file upload
+func handleUpload(w http.ResponseWriter, r *http.Request) {
 	file, handler, err := r.FormFile("file")
 	if err != nil {
 		http.Error(w, "Failed to retrieve file", http.StatusBadRequest)
@@ -34,32 +35,38 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Determine the desired output format (e.g., PDF, DOCX) based on user preferences
-	outputFormat := r.FormValue("format")
-
-	// Convert the uploaded file to the specified format
-	outputPath := convertFile(savePath, outputFormat)
-	if outputPath == "" {
-		http.Error(w, "Failed to convert file", http.StatusInternalServerError)
-		return
-	}
-
-	// Send the converted file path as a response
-	fmt.Fprint(w, outputPath)
+	fmt.Fprint(w, "File uploaded successfully")
 }
 
-func convertFile(filePath, outputFormat string) string {
-	//doc, err := document.Open(filePath)
-	c := &gotenberg.Client{Hostname: "http://localhost:3000"}
-	doc, _ := gotenberg.NewDocumentFromPath("*/.docx", filePath)
-	req := gotenberg.NewOfficeRequest(doc)
-	outputPath := "result.pdf"
-	c.Store(req, outputPath)
+// Function to handle file conversion to specified format (PDF, DOCX, etc.)
+func handleConvert(w http.ResponseWriter, r *http.Request) {
+	filePath := r.FormValue("file")
+	outputFormat := r.FormValue("format")
 
-	return outputPath
+	if filePath == "" || outputFormat == "" {
+		http.Error(w, "Invalid file or format", http.StatusBadRequest)
+
+		c := &gotenberg.Client{Hostname: "http://localhost:3001"}
+
+		doc, _ := gotenberg.NewDocumentFromPath(outputFormat, filePath)
+
+		outputPath := "converted/result." + outputFormat
+
+		req := gotenberg.NewOfficeRequest(doc)
+		err := c.Store(req, outputPath)
+
+		if err != nil {
+			http.Error(w, "Error converting file", http.StatusInternalServerError)
+			return
+		}
+
+		fmt.Fprint(w, outputPath)
+	}
+
 }
 
 func main() {
-	http.HandleFunc("/upload-and-convert", uploadHandler)
+	http.HandleFunc("/upload", handleUpload)
+	http.HandleFunc("/convert", handleConvert)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

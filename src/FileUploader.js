@@ -29,6 +29,16 @@ const FileUploader = () => {
   };
 
   return (
+    <div
+      style={{
+        background: `url('space_background.jpg')`,
+        backgroundSize: 'cover',
+        minHeight: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+      >
     <Container maxWidth="sm" style={{ textAlign: 'center', marginTop: '2rem' }}>
       <Typography variant="h4" component="h1" gutterBottom>
         File Uploader
@@ -77,8 +87,10 @@ const FileUploader = () => {
             Upload and Convert
           </Button>
         </Grid>
+        
       </Grid>
     </Container>
+    </div>
   );
 };
 
