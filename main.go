@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/unidoc/unioffice/document"
+	"github.com/thecodingmachine/gotenberg-go-client/v7"
 )
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
@@ -49,32 +49,17 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func convertFile(filePath, outputFormat string) string {
-	doc, err := document.Open(filePath)
-	if err != nil {
-		return ""
-	}
-	defer doc.Close()
-
-	var outputPath string
-
-	switch outputFormat {
-	case "pdf":
-		outputPath = filepath.Join("converted", "output.pdf")
-		err = doc.SaveToFile(outputPath)
-	case "docx":
-		outputPath = filepath.Join("converted", "output.docx")
-		err = doc.SaveToFile(outputPath)
-		// Additional logic for DOCX conversion can be added here
-	}
-
-	if err != nil {
-		return ""
-	}
+	//doc, err := document.Open(filePath)
+	c := &gotenberg.Client{Hostname: "http://localhost:3000"}
+	doc, _ := gotenberg.NewDocumentFromPath("*/.docx", filePath)
+	req := gotenberg.NewOfficeRequest(doc)
+	outputPath := "result.pdf"
+	c.Store(req, outputPath)
 
 	return outputPath
 }
 
 func main() {
-	http.HandleFunc("/upload", uploadHandler)
+	http.HandleFunc("/upload-and-convert", uploadHandler)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

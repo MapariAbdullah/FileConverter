@@ -4,6 +4,7 @@ import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 
 const FileUploader = () => {
   const [selectedFile, setSelectedFile] = useState(null);
+  const [fileType, setFileType] = useState("");
 
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
@@ -12,119 +13,22 @@ const FileUploader = () => {
   const handleUpload = () => {
     const formData = new FormData();
     formData.append('file', selectedFile);
+    formData.append('format', fileType);
 
-    fetch('/upload', {
+    fetch('/upload-and-convert', {
       method: 'POST',
       body: formData,
     })
-      .then((response) => response.json())
-      .then((data) => {
-        // Handle the response from the server
-        console.log(data);
+      .then((response) => response.text())
+      .then((filePath) => {
+        window.open(filePath, '_blank');
       })
       .catch((error) => {
-        // Handle any errors
-        console.error(error);
-      });
-  };
-
-  const handleConvertToPdf = () => {
-    if (!selectedFile) {
-      console.error('No file selected for conversion.');
-      return;
-    }
-  
-    // Create a FormData object and append the selected file
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-  
-    // Send a request to the backend to perform the conversion to PDF
-    fetch('/convert-to-pdf', {
-      method: 'POST',
-      body: formData,
-    })
-      .then((response) => response.blob())
-      .then((pdfBlob) => {
-        // Create a URL for the PDF blob
-        const pdfUrl = URL.createObjectURL(pdfBlob);
-  
-        // Open the PDF in a new tab (you can also provide a download link)
-        window.open(pdfUrl, '_blank');
-      })
-      .catch((error) => {
-        console.error('Error converting to PDF:', error);
-      });
-  };
-  
-  const handleConvertToImage = () => {
-    if (!selectedFile) {
-      console.error('No file selected for conversion.');
-      return;
-    }
-  
-    // Create a FormData object and append the selected file
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-  
-    // Send a request to the backend to perform the conversion to image
-    fetch('/convert-to-image', {
-      method: 'POST',
-      body: formData,
-    })
-      .then((response) => response.blob())
-      .then((imageBlob) => {
-        // Create a URL for the image blob
-        const imageUrl = URL.createObjectURL(imageBlob);
-  
-        // Open the image in a new tab (you can also provide a download link)
-        window.open(imageUrl, '_blank');
-      })
-      .catch((error) => {
-        console.error('Error converting to image:', error);
-      });
-  };
-  
-  const handleConvertToDocs = () => {
-    if (!selectedFile) {
-      console.error('No file selected for conversion.');
-      return;
-    }
-  
-    // Create a FormData object and append the selected file
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-  
-    // Send a request to the backend to perform the conversion to DOCX
-    fetch('/convert-to-docx', {
-      method: 'POST',
-      body: formData,
-    })
-      .then((response) => response.blob())
-      .then((docxBlob) => {
-        // Create a URL for the DOCX blob
-        const docxUrl = URL.createObjectURL(docxBlob);
-  
-        // Open the DOCX in a new tab (you can also provide a download link)
-        window.open(docxUrl, '_blank');
-      })
-      .catch((error) => {
-        console.error('Error converting to DOCX:', error);
+        console.error('Error:', error);
       });
   };
 
   return (
-
-    <div
-      style={{
-        background: `url('space_background.jpg')`,
-        backgroundSize: 'cover',
-        minHeight: '100vh',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}
-    >
-
     <Container maxWidth="sm" style={{ textAlign: 'center', marginTop: '2rem' }}>
       <Typography variant="h4" component="h1" gutterBottom>
         File Uploader
@@ -149,13 +53,17 @@ const FileUploader = () => {
               Select File
             </Button>
           </label>
-        </Grid>
-
-        {selectedFile && (
+        </Grid> {selectedFile && (
           <Grid item xs={12}>
             <Typography variant="subtitle1" component="p" style={{ marginTop: '1rem' }}>
               Selected File: {selectedFile.name}
             </Typography>
+            <select onChange={(e) => setFileType(e.target.value)} value={fileType}>
+                <option value="">Select file type</option>
+                <option value="pdf">PDF</option>
+                <option value="image">Image</option>
+                <option value="docx">DOCX</option>
+            </select>
           </Grid>
         )}
 
@@ -163,48 +71,14 @@ const FileUploader = () => {
           <Button
             variant="contained"
             color="primary"
-            disabled={!selectedFile}
+            disabled={!selectedFile || !fileType}
             onClick={handleUpload}
           >
-            Upload
-          </Button>
-        </Grid>
-
-        <Grid item xs={12}>
-          <Button
-            variant="contained"
-            color="secondary"
-            disabled={!selectedFile}
-            onClick={handleConvertToPdf}
-          >
-            Convert to PDF
-          </Button>
-        </Grid>
-
-        <Grid item xs={12}>
-          <Button
-            variant="contained"
-            color="secondary"
-            disabled={!selectedFile}
-            onClick={handleConvertToImage}
-          >
-            Convert to Image
-          </Button>
-        </Grid>
-
-        <Grid item xs={12}>
-          <Button
-            variant="contained"
-            color="secondary"
-            disabled={!selectedFile}
-            onClick={handleConvertToDocs}
-          >
-            Convert to DOCX
+            Upload and Convert
           </Button>
         </Grid>
       </Grid>
     </Container>
-    </div>
   );
 };
 
